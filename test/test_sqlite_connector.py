@@ -1,23 +1,18 @@
 import unittest
 import random
 from datetime import datetime
+import os
 
-from connector.psql_connector import PsqlConnector
-
-CREDENTIALS = {
-    'username': 'test',
-    'password': '12345',
-    'dbname': 'my_orm',
-}
+from connector.sqlite_connector import SqliteConnector
 
 SCHEMA = [
-    ('id', 'SERIAL', 'PRIMARY KEY'),
-    ('name', 'VARCHAR(100)'),
+    ('id', 'INTEGER', 'PRIMARY KEY', 'AUTOINCREMENT'),
+    ('name', 'TEXT'),
     ('test_text', 'TEXT'),
     ('test_integer', 'INTEGER'),
-    ('test_float', 'FLOAT'),
-    ('test_date', 'DATE'),
-    ('test_timestamp', 'TIMESTAMP')
+    ('test_float', 'REAL'),
+    ('test_date', 'TEXT'),
+    ('test_timestamp', 'TEXT')
 ]
 
 LETTERS_POOL = 'abcdefghijklmnopqrstuvwxyz'
@@ -33,39 +28,44 @@ for i in range(0, 100):
         'test_text': random_string(LETTERS_POOL, random_int(1, 1000)),
         'test_integer': random_int(1, 1000),
         'test_float': random_float(1, 1000),
-        'test_date': datetime.now().date(),
-        'test_timestamp': datetime.now()
+        'test_date': str(datetime.now().date()),
+        'test_timestamp': str(datetime.now())
     })
 
 
 class TestDropTable(unittest.TestCase):
-    def setUp(self):
-        self.conn = PsqlConnector(username=CREDENTIALS['username'],
-                                  password=CREDENTIALS['password'],
-                                  dbname=CREDENTIALS['dbname'])
+    @classmethod
+    def setUpClass(cls):
+        cls.conn = SqliteConnector(path="./test.db")
 
     def test_drop_table(self):
         self.conn.drop_table("test_abc")
 
+    @classmethod
+    def tearDownClass(cls):
+        os.remove("./test.db")
+
 
 class TestCreateTable(unittest.TestCase):
-    def setUp(self):
-        self.conn = PsqlConnector(username=CREDENTIALS['username'],
-                                  password=CREDENTIALS['password'],
-                                  dbname=CREDENTIALS['dbname'])
-        self.conn.drop_table("test_abc")
+    @classmethod
+    def setUpClass(cls):
+        cls.conn = SqliteConnector(path="./test.db")
+        cls.conn.drop_table("test_abc")
 
     def test_create_table(self):
         self.conn.create_table("test_abc", SCHEMA)
 
+    @classmethod
+    def tearDownClass(cls):
+        os.remove("./test.db")
+
 
 class TestNoErrorsCRUD(unittest.TestCase):
-    def setUp(self):
-        self.conn = PsqlConnector(username=CREDENTIALS['username'],
-                                  password=CREDENTIALS['password'],
-                                  dbname=CREDENTIALS['dbname'])
-        self.conn.drop_table("test_abc")
-        self.conn.create_table("test_abc", SCHEMA)
+    @classmethod
+    def setUpClass(cls):
+        cls.conn = SqliteConnector(path="./test.db")
+        cls.conn.drop_table("test_abc")
+        cls.conn.create_table("test_abc", SCHEMA)
 
     def test_create_records(self):
         for it in DATA:
@@ -73,16 +73,12 @@ class TestNoErrorsCRUD(unittest.TestCase):
 
     def test_read_records(self):
         self.conn.read('test_abc')
-
         self.conn.read('test_abc',
                        conditions=[('id', '=', 1)])
-
         self.conn.read('test_abc',
                        conditions=[('test_text', '=', DATA[0]['test_text']), '&', ('name', '=', DATA[0]['name'])])
-
         self.conn.read('test_abc',
                        columns=['id', 'name', 'test_text'])
-
         self.conn.read('test_abc',
                        columns=['id', 'name', 'test_text'],
                        conditions=[('test_text', '=', DATA[0]['test_text']), '&', ('name', '=', DATA[0]['name'])])
@@ -105,3 +101,7 @@ class TestNoErrorsCRUD(unittest.TestCase):
         self.conn.execute_raw_sql("SELECT * FROM test_abc;")
         self.conn.execute_raw_sql("SELECT * FROM test_abc WHERE id=1;")
         self.conn.execute_raw_sql("INSERT INTO test_abc (name, test_text) VALUES ('xyz', 'abc');")
+
+    @classmethod
+    def tearDownClass(cls):
+        os.remove("./test.db")

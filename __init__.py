@@ -1,3 +1,4 @@
 from . import client
-from . import abstract_connector
-from . import psql_connector
+from . import connector
+from . import test
+

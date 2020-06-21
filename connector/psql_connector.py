@@ -1,4 +1,4 @@
-from abstract_connector import AbstractConnector
+from .abstract_connector import AbstractConnector
 
 import psycopg2
 

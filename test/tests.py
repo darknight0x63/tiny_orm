@@ -1,9 +1,8 @@
 import unittest
 import random
-import string
 from datetime import datetime
 
-from psql_connector import PsqlConnector
+from connector.psql_connector import PsqlConnector
 
 CREDENTIALS = {
     'username': 'test',

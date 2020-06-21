@@ -1,4 +1,5 @@
 from .abstract_connector import AbstractConnector
+from .tools import _conditions_to_sql
 
 import psycopg2
 
@@ -58,39 +59,22 @@ class PsqlConnector(AbstractConnector):
     @_dbconnect
     def read(self, table_name: str, columns: list = None, conditions: list = []):
         _columns = ", ".join((col for col in columns)) if columns else "*"
-        _conditions, _conditions_values = self._conditions_to_sql(conditions)
+        _conditions, _conditions_values = _conditions_to_sql(conditions)
         return "SELECT %s FROM %s %s;" % (_columns, table_name, _conditions), _conditions_values
 
     @_dbconnect
     def update(self, table_name: str, values: dict, conditions: list = []):
         _columns = ', '.join(["%s=%s" % (key, "%s") for key in values])
         _values = [values[key] for key in values]
-        _conditions, _conditions_values = self._conditions_to_sql(conditions)
+        _conditions, _conditions_values = _conditions_to_sql(conditions)
         return "UPDATE %s " % table_name + "SET %s" % _columns + "%s;" % _conditions, _values + _conditions_values
 
     @_dbconnect
     def delete(self, table_name: str, conditions: list = []):
-        _conditions, _conditions_values = self._conditions_to_sql(conditions)
+        _conditions, _conditions_values = _conditions_to_sql(conditions)
         return "DELETE FROM %s %s;" % (table_name, _conditions), _conditions_values
 
     @_dbconnect
     def execute_raw_sql(self, query):
         return query
 
-    @staticmethod
-    def _conditions_to_sql(conditions: list) -> str:
-        cond_str = str()
-        _values = []
-        for cond in conditions:
-            if type(cond) == str and cond in ["&", "|"]:
-                cond_str += " %s" % "AND" if cond == '&' else "OR"
-            elif len(cond) == 3:
-                cond_str += " %s%s%s" % (cond[0], cond[1], "%s")
-                _values.append(cond[2])
-            else:
-                raise ValueError("Invalid expression %s" % cond)
-
-        if cond_str:
-            cond_str = "WHERE " + cond_str
-
-        return cond_str, _values

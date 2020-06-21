@@ -73,6 +73,10 @@ class PsqlConnector(AbstractConnector):
         _conditions, _conditions_values = self._conditions_to_sql(conditions)
         return "DELETE FROM %s %s;" % (table_name, _conditions), _conditions_values
 
+    @_dbconnect
+    def execute_raw_sql(self, query):
+        return query
+
     @staticmethod
     def _conditions_to_sql(conditions: list) -> str:
         cond_str = str()

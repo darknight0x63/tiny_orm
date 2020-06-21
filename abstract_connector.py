@@ -26,3 +26,7 @@ class AbstractConnector(ABC):
     @abstractmethod
     def delete(self, table_name: str, conditions: list = []):
         pass
+
+    @abstractmethod
+    def execute_raw_sql(self, query: str):
+        pass

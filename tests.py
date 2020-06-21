@@ -60,7 +60,7 @@ class TestCreateTable(unittest.TestCase):
         self.conn.create_table("test_abc", SCHEMA)
 
 
-class TestCreateRecords(unittest.TestCase):
+class TestNoErrorsCRUD(unittest.TestCase):
     def setUp(self):
         self.conn = PsqlConnector(username=CREDENTIALS['username'],
                                   password=CREDENTIALS['password'],
@@ -101,3 +101,8 @@ class TestCreateRecords(unittest.TestCase):
 
         self.conn.delete('test_abc',
                          conditions=[('name', '=', DATA[0]['name'])])
+
+    def test_raw_sql(self):
+        self.conn.execute_raw_sql("SELECT * FROM test_abc;")
+        self.conn.execute_raw_sql("SELECT * FROM test_abc WHERE id=1;")
+        self.conn.execute_raw_sql("INSERT INTO test_abc (name, test_text) VALUES ('xyz', 'abc');")

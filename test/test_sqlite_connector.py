@@ -82,6 +82,12 @@ class TestNoErrorsCRUD(unittest.TestCase):
         self.conn.read('test_abc',
                        columns=['id', 'name', 'test_text'],
                        conditions=[('test_text', '=', DATA[0]['test_text']), '&', ('name', '=', DATA[0]['name'])])
+        self.conn.read('test_abc',
+                       columns=['id', 'name', 'test_text'],
+                       conditions=[('id', 'in', [1, 2, 3, 5])])
+        self.conn.read('test_abc',
+                       columns=['id', 'name', 'test_text'],
+                       conditions=[('id', 'not in', [1, 2, 3, 5])])
 
     def test_update_records(self):
         self.conn.update('test_abc',
